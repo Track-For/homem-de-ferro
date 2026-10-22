@@ -14,9 +14,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Stark Industries — Mark LXXXV",
+  title: "Indústrias Stark — Mark LXXXV",
   description:
-    "Arc reactor online. J.A.R.V.I.S. standing by. Scroll to engage the Mark LXXXV.",
+    "Reator Arc ativo. J.A.R.V.I.S. a postos. Role para ativar a Mark LXXXV.",
   metadataBase: new URL("http://localhost:3000"),
 };
 
@@ -25,7 +25,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html
-      lang="en"
+      lang="pt-BR"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="relative min-h-full bg-background text-foreground grain">
