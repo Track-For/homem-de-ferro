@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { gsap, ScrollTrigger } from "@/lib/motion";
 import { EyebrowBadge } from "@/components/ui/EyebrowBadge";
 import { HudFrame } from "@/components/ui/HudFrame";
 import { DIALOGUES, FRAME_COUNT, HERO_TEXT_FADE_END, framePath } from "@/lib/hero";
@@ -14,7 +15,6 @@ export function Hero() {
   const powerReadoutRef = useRef<HTMLSpanElement | null>(null);
 
   const framesRef = useRef<HTMLImageElement[]>([]);
-  const tickingRef = useRef(false);
   const loadedRef = useRef(false);
   const lastFrameRef = useRef(-1);
   const prevVisibleIdsRef = useRef("");
@@ -118,22 +118,11 @@ export function Hero() {
   }, [loaded, drawFrame]);
 
   useEffect(() => {
-    const handleScroll = () => {
-      if (tickingRef.current) return;
-      tickingRef.current = true;
-
-      requestAnimationFrame(() => {
-        tickingRef.current = false;
-        const section = sectionRef.current;
-        if (!section || !loadedRef.current) return;
-
-        const rect = section.getBoundingClientRect();
-        const scrollable = section.offsetHeight - window.innerHeight;
-        const progress =
-          scrollable <= 0
-            ? 0
-            : Math.min(1, Math.max(0, -rect.top / scrollable));
-
+    if (!loaded || !sectionRef.current) return;
+    const media = gsap.matchMedia();
+    media.add({ reduced: "(prefers-reduced-motion: reduce)", full: "(prefers-reduced-motion: no-preference)" }, (context) => {
+      const reduced = context.conditions?.reduced;
+      const render = (progress: number) => {
         const frameIndex = Math.min(
           FRAME_COUNT - 1,
           Math.floor(progress * FRAME_COUNT),
@@ -173,13 +162,22 @@ export function Hero() {
           prevVisibleIdsRef.current = newIds;
           setVisibleCards(newVisible);
         }
-      });
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    handleScroll();
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [drawFrame]);
+      };
+      if (reduced) {
+        render(0);
+      } else {
+        const playhead = { progress: 0 };
+        gsap.to(playhead, {
+          progress: 1, ease: "none",
+          onUpdate: () => render(playhead.progress),
+          scrollTrigger: { trigger: sectionRef.current, start: "top top", end: "bottom bottom", scrub: 0.35, invalidateOnRefresh: true },
+        });
+        render(0);
+      }
+      ScrollTrigger.refresh();
+    });
+    return () => media.revert();
+  }, [drawFrame, loaded]);
 
   return (
     <section ref={sectionRef} className="scroll-animation relative">

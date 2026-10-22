@@ -1,36 +1,23 @@
 "use client";
-
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import Lenis from "lenis";
-
-type Props = { children: React.ReactNode };
-
-export function SmoothScrollProvider({ children }: Props) {
-  const lenisRef = useRef<Lenis | null>(null);
-
+import { gsap, ScrollTrigger } from "@/lib/motion";
+export function SmoothScrollProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
-    const lenis = new Lenis({
-      lerp: 0.1,
-      duration: 1.2,
-      smoothWheel: true,
-      syncTouch: false,
-      touchMultiplier: 1.1,
+    const media = gsap.matchMedia();
+    media.add("(prefers-reduced-motion: no-preference)", () => {
+      const lenis = new Lenis({ lerp: 0.1, smoothWheel: true, anchors: true });
+      const tick = (time: number) => lenis.raf(time * 1000);
+      lenis.on("scroll", ScrollTrigger.update);
+      gsap.ticker.add(tick);
+      gsap.ticker.lagSmoothing(0);
+      return () => {
+        gsap.ticker.remove(tick);
+        lenis.off("scroll", ScrollTrigger.update);
+        lenis.destroy();
+      };
     });
-    lenisRef.current = lenis;
-
-    let rafId = 0;
-    const raf = (time: number) => {
-      lenis.raf(time);
-      rafId = requestAnimationFrame(raf);
-    };
-    rafId = requestAnimationFrame(raf);
-
-    return () => {
-      cancelAnimationFrame(rafId);
-      lenis.destroy();
-      lenisRef.current = null;
-    };
+    return () => media.revert();
   }, []);
-
   return <>{children}</>;
 }

@@ -1,3 +1,4 @@
+import { ArcReactor } from "@/components/sections/ArcReactor";
 import { Navbar } from "@/components/ui/Navbar";
 import { Hero } from "@/components/sections/Hero";
 import { CinematicReveal } from "@/components/sections/CinematicReveal";
@@ -11,6 +12,7 @@ export default function Home() {
       <main>
         <Hero />
         <CinematicReveal />
+        <ArcReactor />
         <SystemsNominal />
       </main>
       <Footer />
